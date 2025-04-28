@@ -19,6 +19,14 @@ services:
       # - "8989:8989" # wss
       - "8089:8089" # general secure
       # - "10000-10200:10000-10200/udp" # streaming rtp
+  janus-interface:
+    image: node:23-bullseye
+    working_dir: /app
+    command: yarn dev
+    volumes:
+      - ./janus-interface:/app
+    ports:
+      - 3000:3000
   janus-sample-front:
     build: ./janus-sample-front
     command: bash -c "cd /app/janus-gateway/html && ws --http2"
