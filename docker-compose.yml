@@ -1,0 +1,26 @@
+services:
+  janus:
+    build: ./janus
+    command: /opt/janus/bin/janus
+    volumes:
+      - ./janus/certs:/opt/certs
+      - ./data:/opt/data
+      - type: bind
+        source: ./janus/config/janus.transport.http.jcfg
+        target: /opt/janus/etc/janus/janus.transport.http.jcfg
+      - type: bind
+        source: ./janus/config/janus.plugin.streaming.jcfg
+        target: /opt/janus/etc/janus/janus.plugin.streaming.jcfg
+    ports:
+      - "5000-5100:5000-5100/udp"
+      - "7088:7088"
+      - "8088:8088"
+      - "8188:8188"
+      - "8989:8989"
+      - "8089:8089"
+      - "10000-10200:10000-10200/udp"
+  janus-sample-front:
+    build: ./janus-sample-front
+    command: bash -c "cd /app/janus-gateway/html && ws --http2"
+    ports:
+      - "8000:8000"
