@@ -12,13 +12,13 @@ services:
         source: ./janus/config/janus.plugin.streaming.jcfg
         target: /opt/janus/etc/janus/janus.plugin.streaming.jcfg
     ports:
-      - "5000-5100:5000-5100/udp"
-      - "7088:7088"
-      - "8088:8088"
-      - "8188:8188"
-      - "8989:8989"
-      - "8089:8089"
-      - "10000-10200:10000-10200/udp"
+      - "5000-5100:5000-5100/udp" # rtp input
+      # - "7088:7088" # admin
+      # - "8088:8088" # general
+      # - "8188:8188" # ws
+      # - "8989:8989" # wss
+      - "8089:8089" # general secure
+      # - "10000-10200:10000-10200/udp" # streaming rtp
   janus-sample-front:
     build: ./janus-sample-front
     command: bash -c "cd /app/janus-gateway/html && ws --http2"
