@@ -1,9 +1,17 @@
+'use client'
 import Image from "next/image";
+import dynamic from "next/dynamic"
+// const StreamViewer = dynamic(() => import("./client/stream_viewer").then((mod) => mod.StreamViewer), {
+//   ssr: false
+// })
+import { StreamViewer } from "./client/stream_viewer";
 
-export default function Home() {
+function Home() {
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+        {/* <div>{ format(new Date(), "yyyy-MM-dd hh:mm:ss") }</div> */}
+        <StreamViewer />
         <Image
           className="dark:invert"
           src="/next.svg"
@@ -101,3 +109,7 @@ export default function Home() {
     </div>
   );
 }
+
+export default dynamic(() => Promise.resolve(Home), {
+  ssr: false,
+});
