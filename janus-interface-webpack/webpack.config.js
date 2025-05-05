@@ -29,7 +29,8 @@ module.exports = {
     port: 3001,
     devMiddleware: {
       writeToDisk: true,
-    }
+    },
+    server: "https",
   },
   watchOptions: {
     ignored: [path.posix.resolve(__dirname, './node_modules')],
