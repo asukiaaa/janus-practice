@@ -22,11 +22,19 @@ services:
   janus-interface:
     image: node:23-bullseye
     working_dir: /app
-    command: yarn dev
+    command: bash -c "yarn && yarn dev"
     volumes:
       - ./janus-interface:/app
     ports:
       - 3000:3000
+  janus-interface-webpack:
+    image: node:23-bullseye
+    working_dir: /app
+    command: bash -c "yarn && npx --yes webpack serve"
+    volumes:
+      - ./janus-interface-webpack:/app
+    ports:
+      - 3001:3001
   janus-sample-front:
     build: ./janus-sample-front
     command: bash -c "cd /app/janus-gateway/html && ws --http2"
