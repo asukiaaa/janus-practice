@@ -1,14 +1,16 @@
 import Janus from 'janus-gateway'
 
+const server = "http://localhost:8088/janus"
+// https://github.com/meetecho/janus-gateway/blob/495c038fc99953d840cc4dc5c4ef3057201a7584/html/demos/janus.js#L610
+const iceServers = [{ urls: "stun:stun.l.google.com:19302" }] // 要らんかもしれん
+
 class JanusManager {
   janus = null
   idToWatch = 1
-  // https://github.com/meetecho/janus-gateway/blob/495c038fc99953d840cc4dc5c4ef3057201a7584/html/demos/janus.js#L610
-  iceServers = [{ urls: "stun:stun.l.google.com:19302" }] // 要らんかもしれん
   paqueId = null
 
   constructor(inittialize = true) {
-    this.paqueId = "streamingtest-"+Janus.randomString(12);
+    this.paqueId = "streamingtest-" + Janus.randomString(12);
     if (inittialize) {
       this.#init()
     }
@@ -25,8 +27,8 @@ class JanusManager {
 
   #createJanusInstance() {
     this.janus = new Janus({
-      server: "http://localhost:8088/janus",
-      iccServers: this.iceServers,
+      server,
+      iceServers,
       success: () => {
         console.log('suceeded')
         this.#attachPuligin()
