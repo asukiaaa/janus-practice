@@ -85,6 +85,11 @@ class JanusManager {
           console.log('stream', stream)
           var video = document.getElementById("videoStream")
           video.srcObject = stream
+          video.play().then(() => {
+            console.log('start playing')
+          }).catch(() => {
+            console.log('failed to play')
+          })
           // remoteTracks[mid] = stream;
           Janus.log("Created remote video stream:", stream);
         }
