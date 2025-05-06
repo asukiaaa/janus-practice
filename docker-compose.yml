@@ -9,15 +9,19 @@ services:
         source: ./janus/config/janus.transport.http.jcfg
         target: /opt/janus/etc/janus/janus.transport.http.jcfg
       - type: bind
+        source: ./janus/config/janus.transport.websockets.jcfg
+        target: /opt/janus/etc/janus/janus.transport.websockets.jcfg
+      - type: bind
         source: ./janus/config/janus.plugin.streaming.jcfg
         target: /opt/janus/etc/janus/janus.plugin.streaming.jcfg
     ports:
       - "5000-5100:5000-5100/udp" # rtp input
       # - "7088:7088" # admin
-      # - "8088:8088" # general
-      # - "8188:8188" # ws
-      # - "8989:8989" # wss
+      # - "7889:7889" # admin secure
+      - "8088:8088" # general
       - "8089:8089" # general secure
+      - "8188:8188" # ws
+      - "8989:8989" # wss
       # - "10000-10200:10000-10200/udp" # streaming rtp
   janus-interface:
     image: node:23-bullseye
