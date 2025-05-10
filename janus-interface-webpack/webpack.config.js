@@ -30,7 +30,7 @@ module.exports = {
     devMiddleware: {
       writeToDisk: true,
     },
-    server: "https",
+    // server: "https",
   },
   watchOptions: {
     ignored: [path.posix.resolve(__dirname, './node_modules')],
