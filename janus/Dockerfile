@@ -8,7 +8,6 @@ RUN mkdir -p ${DIR_BUILD}
 RUN apt-get update && apt-get install -y --fix-missing \
   libmicrohttpd-dev \
   libjansson-dev \
-  libnice-dev \
   libssl-dev \
   libsofia-sip-ua-dev \
   libglib2.0-dev \
@@ -55,9 +54,8 @@ RUN cd ${DIR_BUILD} \
   && make install
 
 RUN cd ${DIR_BUILD} \
-  && wget https://github.com/cisco/libsrtp/archive/v2.3.0.tar.gz \
-  && tar xfv v2.3.0.tar.gz \
-  && cd libsrtp-2.3.0 \
+  && git clone https://github.com/cisco/libsrtp.git -b v2.7.0 --depth=1 \
+  && cd libsrtp \
   && ./configure --prefix=/usr --enable-openssl \
   && make shared_library \
   && make install
@@ -71,7 +69,7 @@ RUN cd ${DIR_BUILD} \
   && make install
 
 RUN cd ${DIR_BUILD} \
-  && git clone https://libwebsockets.org/repo/libwebsockets -b v4.3-stable --depth=1 \
+  && git clone https://github.com/warmcat/libwebsockets.git -b v4.3.5 --depth=1 \
   && cd ./libwebsockets \
   && mkdir build \
   && cd ./build \
