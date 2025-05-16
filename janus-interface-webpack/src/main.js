@@ -1,11 +1,24 @@
 import Janus from 'janus-gateway'
 
 var server = null;
+const host = process.env.JANUS_HOST || window.location.hostname;
 if (window.location.protocol === 'http:')
-  server = "http://" + window.location.hostname + ":8088/janus";
+  server = "http://" + host + ":8088/janus";
 else
-  server = "https://" + window.location.hostname + ":8089/janus";// https://github.com/meetecho/janus-gateway/blob/495c038fc99953d840cc4dc5c4ef3057201a7584/html/demos/janus.js#L610
-const iceServers = null // [{ urls: "stun:stun.l.google.com:19302" }] // 要らんかもしれん
+  server = "https://" + host + ":8089/janus";
+
+// https://github.com/meetecho/janus-gateway/blob/495c038fc99953d840cc4dc5c4ef3057201a7584/html/demos/janus.js#L610
+// const iceServers = [{ urls: "stun:stun.l.google.com:19302" }] // 要らんかもしれん
+// const iceServers = null;
+// https://groups.google.com/g/meetecho-janus/c/J6uhVk9jBfE
+// const iceServers = [{ urls: "trun:" + host + ":3478?transport=udp" }]
+const iceServers = process.env.ICE_URL ? [{
+  urls: process.env.ICE_URL,
+  username: process.env.ICE_USERNAME,
+  credential: process.env.ICE_PASSWORD,
+}] : null
+
+// console.log('iceServers', iceServers[0])
 
 // class JanusManager0 {
 //   janus = null

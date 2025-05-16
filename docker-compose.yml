@@ -39,6 +39,13 @@ services:
       - ./janus-interface-webpack:/app
     ports:
       - 3001:3001
+    environment:
+      - PORT=3001
+    #   - HTTPS=true
+    #   - JANUS_HOST=your-janus-server.com
+    #   - ICE_URL=turn:your-ice-server.com:3478
+    #   - ICE_USERNAME=your-ice-username
+    #   - ICE_PASSWORD=your-ice-password
   janus-sample-front:
     build: ./janus-sample-front
     command: bash -c "cd /app/janus-gateway/html && ws --http2"

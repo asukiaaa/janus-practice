@@ -9,7 +9,13 @@ module.exports = {
   },
   mode: 'development',
   plugins: [
-    new webpack.ProvidePlugin({ adapter: ['webrtc-adapter', 'default'] })
+    new webpack.ProvidePlugin({ adapter: ['webrtc-adapter', 'default'] }),
+    new webpack.EnvironmentPlugin({
+      "ICE_URL": null,
+      "ICE_USERNAME": null,
+      "ICE_PASSWORD": null,
+      "JANUS_HOST": null,
+    }),
   ],
   module: {
     rules: [
@@ -26,11 +32,11 @@ module.exports = {
     allowedHosts: "all",
     static: ".",
     compress: true,
-    port: 3001,
+    port: process.env.PORT,
     devMiddleware: {
       writeToDisk: true,
     },
-    // server: "https",
+    server: process.env.HTTPS ? "https" : "http",
   },
   watchOptions: {
     ignored: [path.posix.resolve(__dirname, './node_modules')],
