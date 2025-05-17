@@ -49,5 +49,9 @@ services:
   janus-sample-front:
     build: ./janus-sample-front
     command: bash -c "cd /app/janus-gateway/html && ws --http2"
+    volumes:
+      - type: bind
+        source: ./janus-sample-front
+        target: /app
     ports:
       - "8000:8000"

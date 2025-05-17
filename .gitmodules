@@ -1,0 +1,3 @@
+[submodule "janus-sample-front/janus-gateway"]
+	path = janus-sample-front/janus-gateway
+	url = git@github.com:meetecho/janus-gateway.git
