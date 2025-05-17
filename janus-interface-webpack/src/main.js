@@ -175,12 +175,11 @@ class JanusManager {
 
   constructor() {
     this.#init()
-    this.#createJanusInstance()
   }
 
   #init() {
     Janus.init({
-      debug: "all", callback: function () {
+      debug: "all", callback: () => {
         // Use a button to start the demo
         $('#start').one('click', function () {
           $(this).attr('disabled', true).unbind('click');
@@ -190,6 +189,7 @@ class JanusManager {
             return;
           }
         });
+        this.#createJanusInstance()
       }
     });
   }
@@ -527,7 +527,7 @@ function updateStreamsList(streaming) {
           // Keep track of all the available streams
           streamsList[list[mp]["id"]] = list[mp];
         }
-        $('#streamslist a').off('click').on('click', function() {
+        $('#streamslist a').off('click').on('click', function () {
           selectedStream = $(this).attr("id");
           $('#streamset').html($(this).html());
         });
