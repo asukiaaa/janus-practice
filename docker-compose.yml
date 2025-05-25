@@ -46,6 +46,21 @@ services:
     #   - ICE_URL=turn:your-ice-server.com:3478
     #   - ICE_USERNAME=your-ice-username
     #   - ICE_PASSWORD=your-ice-password
+  janus-interface-webpack-2:
+    image: node:23-bullseye
+    working_dir: /app
+    command: bash -c "yarn && npx --yes webpack serve"
+    volumes:
+      - ./janus-interface-webpack-2:/app
+    ports:
+      - 3002:3002
+    environment:
+      - PORT=3002
+    #   - HTTPS=true
+    #   - JANUS_HOST=your-janus-server.com
+    #   - ICE_URL=turn:your-ice-server.com:3478
+    #   - ICE_USERNAME=your-ice-username
+    #   - ICE_PASSWORD=your-ice-password
   janus-sample-front:
     build: ./janus-sample-front
     command: bash -c "cd /app/janus-gateway/html && ws --http2"
