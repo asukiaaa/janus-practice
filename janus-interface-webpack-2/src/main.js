@@ -49,7 +49,7 @@ class JanusManager {
       event.preventDefault()
       console.log('clicked')
       selectedStream = 1
-      startStream(this.streaming)
+      this.startStream(this.streaming)
     })
   }
 
@@ -79,7 +79,7 @@ class JanusManager {
         this.streaming = pluginHandle;
         Janus.log("Plugin attached! (" + this.streaming.getPlugin() + ", id=" + this.streaming.getId() + ")");
         // Setup streaming session
-        updateStreamsList(this.streaming);
+        this.updateStreamsList(this.streaming);
       },
       error: function (error) {
         Janus.error("  -- Error attaching plugin... ", error);
@@ -102,7 +102,7 @@ class JanusManager {
           if (result["status"]) {
             let status = result["status"];
             if (status === 'stopped')
-              stopStream(this.streaming);
+              this.stopStream(this.streaming);
           } else if (msg["streaming"] === "event") {
             // Does this event refer to a mid in particular?
             let mid = result["mid"] ? result["mid"] : "0";
@@ -241,80 +241,80 @@ class JanusManager {
     }
   }
 
+  getStreamInfo(streaming) {
+    let body = { request: "info", id: parseInt(selectedStream) || selectedStream };
+    streaming.send({
+      message: body, success: (result) => {
+        if (result && result.info && result.info.metadata) {
+        }
+      }
+    });
+  }
+
+  updateStreamsList(streaming) {
+    let body = { request: "list" };
+    Janus.debug("Sending message:", body);
+    streaming.send({
+      message: body, success: function (result) {
+        if (!result) {
+          bootbox.alert("Got no response to our query for available streams");
+          return;
+        }
+        if (result["list"]) {
+          let list = result["list"];
+          if (list && Array.isArray(list)) {
+            list.sort(function (a, b) {
+              if (!a || a.id < (b ? b.id : 0))
+                return -1;
+              if (!b || b.id < (a ? a.id : 0))
+                return 1;
+              return 0;
+            });
+          }
+          Janus.log("Got a list of available streams:", list);
+          streamsList = {};
+          for (let mp in list) {
+            Janus.debug("  >> [" + list[mp]["id"] + "] " + list[mp]["description"] + " (" + list[mp]["type"] + ")");
+            // Check the nature of the available streams, and if there are some multistream ones
+            list[mp].legacy = true;
+            if (list[mp].media) {
+              let audios = 0, videos = 0;
+              for (let mi in list[mp].media) {
+                if (!list[mp].media[mi])
+                  continue;
+                if (list[mp].media[mi].type === "audio")
+                  audios++;
+                else if (list[mp].media[mi].type === "video")
+                  videos++;
+                if (audios > 1 || videos > 1) {
+                  list[mp].legacy = false;
+                  break;
+                }
+              }
+            }
+            // Keep track of all the available streams
+            streamsList[list[mp]["id"]] = list[mp];
+          }
+        }
+      }
+    });
+  }
+
+  startStream(streaming) {
+    let body = { request: "watch", id: parseInt(selectedStream) || selectedStream };
+    streaming.send({ message: body });
+    this.getStreamInfo(streaming);
+  }
+
+  stopStream(streaming) {
+    let body = { request: "stop" };
+    streaming.send({ message: body });
+    streaming.hangup();
+  }
+
 }
 
 var janusManager = null
 document.addEventListener("DOMContentLoaded", () => {
   janusManager = new JanusManager()
 })
-
-function updateStreamsList(streaming) {
-  let body = { request: "list" };
-  Janus.debug("Sending message:", body);
-  streaming.send({
-    message: body, success: function (result) {
-      if (!result) {
-        bootbox.alert("Got no response to our query for available streams");
-        return;
-      }
-      if (result["list"]) {
-        let list = result["list"];
-        if (list && Array.isArray(list)) {
-          list.sort(function (a, b) {
-            if (!a || a.id < (b ? b.id : 0))
-              return -1;
-            if (!b || b.id < (a ? a.id : 0))
-              return 1;
-            return 0;
-          });
-        }
-        Janus.log("Got a list of available streams:", list);
-        streamsList = {};
-        for (let mp in list) {
-          Janus.debug("  >> [" + list[mp]["id"] + "] " + list[mp]["description"] + " (" + list[mp]["type"] + ")");
-          // Check the nature of the available streams, and if there are some multistream ones
-          list[mp].legacy = true;
-          if (list[mp].media) {
-            let audios = 0, videos = 0;
-            for (let mi in list[mp].media) {
-              if (!list[mp].media[mi])
-                continue;
-              if (list[mp].media[mi].type === "audio")
-                audios++;
-              else if (list[mp].media[mi].type === "video")
-                videos++;
-              if (audios > 1 || videos > 1) {
-                list[mp].legacy = false;
-                break;
-              }
-            }
-          }
-          // Keep track of all the available streams
-          streamsList[list[mp]["id"]] = list[mp];
-        }
-      }
-    }
-  });
-}
-
-function getStreamInfo(streaming) {
-  let body = { request: "info", id: parseInt(selectedStream) || selectedStream };
-  streaming.send({
-    message: body, success: function (result) {
-      if (result && result.info && result.info.metadata) {
-      }
-    }
-  });
-}
-
-function startStream(streaming) {
-  let body = { request: "watch", id: parseInt(selectedStream) || selectedStream };
-  streaming.send({ message: body });
-  getStreamInfo(streaming);
-}
-
-function stopStream(streaming) {
-  let body = { request: "stop" };
-  streaming.send({ message: body });
-  streaming.hangup();
-}
