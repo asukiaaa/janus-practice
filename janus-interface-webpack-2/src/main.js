@@ -22,7 +22,7 @@ const iceServers = process.env.ICE_URL ? [{
 
 var remoteTracks = {}, remoteVideos = 0;
 
-var simulcastStarted = {}, svcStarted = {};
+// var simulcastStarted = {}, svcStarted = {};
 
 // var streamsList = {};
 
@@ -110,10 +110,10 @@ class JanusManager {
             let substream = result["substream"];
             let temporal = result["temporal"];
             if ((substream !== null && substream !== undefined) || (temporal !== null && temporal !== undefined)) {
-              if (!simulcastStarted[mid]) {
-                simulcastStarted[mid] = true;
-                // addSimulcastButtons(mid, this.streaming);
-              }
+              // if (!simulcastStarted[mid]) {
+              //   simulcastStarted[mid] = true;
+              //   // addSimulcastButtons(mid, this.streaming);
+              // }
               // We just received notice that there's been a switch, update the buttons
               // updateSimulcastButtons(mid, substream, temporal);
             }
@@ -121,10 +121,10 @@ class JanusManager {
             let spatial = result["spatial_layer"];
             temporal = result["temporal_layer"];
             if ((spatial !== null && spatial !== undefined) || (temporal !== null && temporal !== undefined)) {
-              if (!svcStarted[mid]) {
-                svcStarted[mid] = true;
-                // addSvcButtons(mid, this.streaming);
-              }
+              // if (!svcStarted[mid]) {
+              //   svcStarted[mid] = true;
+              //   // addSvcButtons(mid, this.streaming);
+              // }
               // We just received notice that there's been a switch, update the buttons
               // updateSvcButtons(mid, spatial, temporal);
             }
@@ -176,7 +176,7 @@ class JanusManager {
       },
       oncleanup: function () {
         Janus.log(" ::: Got a cleanup notification :::");
-        simulcastStarted = false;
+        // simulcastStarted = false;
         remoteTracks = {};
         remoteVideos = 0;
         dataMid = null;
