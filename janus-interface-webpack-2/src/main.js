@@ -24,7 +24,7 @@ var remoteTracks = {}, remoteVideos = 0;
 
 var simulcastStarted = {}, svcStarted = {};
 
-var streamsList = {};
+// var streamsList = {};
 
 class JanusManager {
   janus = null
@@ -191,8 +191,8 @@ class JanusManager {
       (metadata ? " (" + metadata.reason + ") " : "") + ":", track
     );
     let mstreamId = "mstream" + mid;
-    if (streamsList[this.selectedStream] && streamsList[this.selectedStream].legacy)
-      mstreamId = "mstream0";
+    // if (streamsList[this.selectedStream] && streamsList[this.selectedStream].legacy)
+    //   mstreamId = "mstream0";
     if (!on) {
       // Track removed, get rid of the stream and the rendering
       if (track.kind === "video") {
@@ -269,7 +269,7 @@ class JanusManager {
             });
           }
           Janus.log("Got a list of available streams:", list);
-          streamsList = {};
+          // streamsList = {};
           for (let mp in list) {
             Janus.debug("  >> [" + list[mp]["id"] + "] " + list[mp]["description"] + " (" + list[mp]["type"] + ")");
             // Check the nature of the available streams, and if there are some multistream ones
@@ -290,7 +290,7 @@ class JanusManager {
               }
             }
             // Keep track of all the available streams
-            streamsList[list[mp]["id"]] = list[mp];
+            // streamsList[list[mp]["id"]] = list[mp];
           }
         }
       }
