@@ -21,7 +21,6 @@ const iceServers = process.env.ICE_URL ? [{
 }] : null
 
 var remoteTracks = {}, remoteVideos = 0;
-var bitrateTimer = {};
 
 var simulcastStarted = {}, svcStarted = {};
 
@@ -177,9 +176,6 @@ class JanusManager {
       },
       oncleanup: function () {
         Janus.log(" ::: Got a cleanup notification :::");
-        for (let i in bitrateTimer)
-          clearInterval(bitrateTimer[i]);
-        bitrateTimer = {};
         simulcastStarted = false;
         remoteTracks = {};
         remoteVideos = 0;
