@@ -20,21 +20,21 @@ const iceServers = process.env.ICE_URL ? [{
   credential: process.env.ICE_PASSWORD,
 }] : null
 
-var opaqueId = "streamingtest-" + Janus.randomString(12);
-
 var remoteTracks = {}, remoteVideos = 0;
 var bitrateTimer = {};
 
 var simulcastStarted = {}, svcStarted = {};
 
 var streamsList = {};
-var selectedStream = null;
 
 class JanusManager {
   janus = null
   streaming = null
+  selectedStream = null;
+  opaqueId = null;
 
   constructor() {
+    this.opaqueId = "streamingtest-" + Janus.randomString(12);
     this.#init()
   }
 
@@ -48,8 +48,9 @@ class JanusManager {
     btnAction.addEventListener("click", (event) => {
       event.preventDefault()
       console.log('clicked')
-      selectedStream = 1
-      this.startStream(this.streaming)
+      this.selectedStream = 1
+      this.startStream(this.streaming, this.selectedStream)
+      this.getStreamInfo(this.streaming);
     })
   }
 
@@ -74,7 +75,7 @@ class JanusManager {
   #attachPlugin() {
     this.janus.attach({
       plugin: "janus.plugin.streaming",
-      opaqueId: opaqueId,
+      opaqueId: this.opaqueId,
       success: (pluginHandle) => {
         this.streaming = pluginHandle;
         Janus.log("Plugin attached! (" + this.streaming.getPlugin() + ", id=" + this.streaming.getId() + ")");
@@ -194,7 +195,7 @@ class JanusManager {
       (metadata ? " (" + metadata.reason + ") " : "") + ":", track
     );
     let mstreamId = "mstream" + mid;
-    if (streamsList[selectedStream] && streamsList[selectedStream].legacy)
+    if (streamsList[this.selectedStream] && streamsList[this.selectedStream].legacy)
       mstreamId = "mstream0";
     if (!on) {
       // Track removed, get rid of the stream and the rendering
@@ -242,7 +243,7 @@ class JanusManager {
   }
 
   getStreamInfo(streaming) {
-    let body = { request: "info", id: parseInt(selectedStream) || selectedStream };
+    let body = { request: "info", id: parseInt(this.selectedStream) || this.selectedStream };
     streaming.send({
       message: body, success: (result) => {
         if (result && result.info && result.info.metadata) {
@@ -300,10 +301,9 @@ class JanusManager {
     });
   }
 
-  startStream(streaming) {
-    let body = { request: "watch", id: parseInt(selectedStream) || selectedStream };
+  startStream(streaming, id) {
+    let body = { request: "watch", id };
     streaming.send({ message: body });
-    this.getStreamInfo(streaming);
   }
 
   stopStream(streaming) {
