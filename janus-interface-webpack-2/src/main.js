@@ -20,7 +20,7 @@ const iceServers = process.env.ICE_URL ? [{
   credential: process.env.ICE_PASSWORD,
 }] : null
 
-var remoteTracks = {}, remoteVideos = 0;
+// var remoteTracks = {}, remoteVideos = 0;
 
 // var simulcastStarted = {}, svcStarted = {};
 
@@ -177,8 +177,8 @@ class JanusManager {
       oncleanup: function () {
         Janus.log(" ::: Got a cleanup notification :::");
         // simulcastStarted = false;
-        remoteTracks = {};
-        remoteVideos = 0;
+        // remoteTracks = {};
+        // remoteVideos = 0;
         dataMid = null;
       }
     });
@@ -196,28 +196,28 @@ class JanusManager {
     if (!on) {
       // Track removed, get rid of the stream and the rendering
       if (track.kind === "video") {
-        remoteVideos--;
-        if (remoteVideos === 0) {
-          // No video, at least for now: show a placeholder
-        }
+        // remoteVideos--;
+        // if (remoteVideos === 0) {
+        //   // No video, at least for now: show a placeholder
+        // }
       }
-      delete remoteTracks[mid];
+      // delete remoteTracks[mid];
       return;
     }
     let stream = null;
     if (track.kind === "audio") {
       // New audio track: create a stream out of it, and use a hidden <audio> element
       stream = new MediaStream([track]);
-      remoteTracks[mid] = stream;
+      // remoteTracks[mid] = stream;
       Janus.log("Created remote audio stream:", stream);
-      if (remoteVideos === 0) {
-        // No video, at least for now: show a placeholder
-      }
+      // if (remoteVideos === 0) {
+      //   // No video, at least for now: show a placeholder
+      // }
     } else {
       // New video track: create a stream out of it
-      remoteVideos++;
+      // remoteVideos++;
       stream = new MediaStream([track]);
-      remoteTracks[mid] = stream;
+      // remoteTracks[mid] = stream;
       Janus.log("Created remote video stream:", stream);
     }
     var element = document.getElementById("videoStream")
