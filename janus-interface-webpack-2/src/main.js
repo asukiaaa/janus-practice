@@ -20,71 +20,100 @@ const iceServers = process.env.ICE_URL ? [{
   credential: process.env.ICE_PASSWORD,
 }] : null
 
-// var remoteTracks = {}, remoteVideos = 0;
-
-// var simulcastStarted = {}, svcStarted = {};
-
-// var streamsList = {};
-
 class JanusManager {
   janus = null
-  streaming = null
-  selectedStream = null;
-  opaqueId = null;
+  idToWatch = 1
+  paqueId = null
 
-  constructor() {
-    this.opaqueId = "streamingtest-" + Janus.randomString(12);
-    this.#init()
+  constructor(inittialize = true) {
+    this.paqueId = "streamingtest-" + Janus.randomString(12);
+    if (inittialize) {
+      this.#init()
+    }
+    this.#createJanusInstance()
   }
 
   #init() {
     Janus.init({
-      debug: "all", callback: () => {
-        this.#createJanusInstance()
-      }
-    });
-    const btnAction = document.getElementById("btn-play")
-    btnAction.addEventListener("click", (event) => {
-      event.preventDefault()
-      console.log('clicked')
-      this.selectedStream = 1
-      this.startStream(this.streaming, this.selectedStream)
-      this.getStreamInfo(this.streaming);
+      debug: true,
+      dependencies: Janus.useDefaultDependencies(),
+      callback: () => { console.log('callback of init') },
     })
   }
 
   #createJanusInstance() {
-    // Create session
     this.janus = new Janus({
-      server: server,
-      iceServers: iceServers,
+      server,
+      iceServers,
       success: () => {
-        // Attach to Streaming plugin
-        this.#attachPlugin()
+        console.log('suceeded')
+        this.#attachPuliginStream()
       },
-      error: function (error) {
-        Janus.error(error);
-      },
-      destroyed: function () {
-        window.location.reload();
-      }
-    });
+      error: (cause) => { console.log('error', cause) },
+      destroyed: () => { console.log('destroyed') },
+    })
   }
 
-  #attachPlugin() {
+  #attachPuliginStream() {
+    var pluginStreaming = null;
     this.janus.attach({
       plugin: "janus.plugin.streaming",
-      opaqueId: this.opaqueId,
-      success: (pluginHandle) => {
-        this.streaming = pluginHandle;
-        Janus.log("Plugin attached! (" + this.streaming.getPlugin() + ", id=" + this.streaming.getId() + ")");
-        // Setup streaming session
-        this.updateStreamsList(this.streaming);
+      paqueId: this.paqueId,
+      success: (plugin) => {
+        pluginStreaming = plugin
+        console.log('attachecd to streaming', plugin)
+        this.#showStreaming(plugin)
       },
-      error: function (error) {
-        Janus.error("  -- Error attaching plugin... ", error);
-        bootbox.alert("Error attaching plugin... " + error);
+      onmessage: (message, jsep) => {
+        console.log('onmessage', message, jsep)
+        var result = message["result"];
+        if (result) {
+          let status = result['status']
+          console.log('status', status)
+        }
+        // let stereo = (jsep.sdp.indexOf("stereo=1") !== -1);
+        if (jsep) {
+          console.log("handle jsep")
+          pluginStreaming.createAnswer({
+            jsep,
+            tracks: [{ type: "data" }],
+            customizeSdp: (jsep) => {
+              console.log('customizeSdp')
+            },
+            success: (jsep) => {
+              console.log('success createAnswer')
+              pluginStreaming.send({
+                message: { request: "start" },
+                jsep,
+                success: (data) => {
+                  console.log('request to start', data)
+                }
+              })
+            },
+            error: (error) => {
+              console.log('error at createAnswer', error)
+            }
+          })
+        }
       },
+      onremotetrack: (track, mid, on, metadata) => {
+        console.log('on remotetrack', track, mid, on, metadata)
+        if (track.kind == "video") {
+          console.log('handle video')
+          let stream = new MediaStream([track]);
+          console.log('stream', stream)
+          var video = document.getElementById("videoStream")
+          video.srcObject = stream
+          video.play().then(() => {
+            console.log('start playing')
+          }).catch(() => {
+            console.log('failed to play')
+          })
+          // remoteTracks[mid] = stream;
+          Janus.log("Created remote video stream:", stream);
+        }
+      },
+      oncleanup: () => Janus.log(" ::: Got a cleanup notification :::"),
       iceState: function (state) {
         Janus.log("ICE state changed to " + state);
       },
@@ -95,222 +124,37 @@ class JanusManager {
         Janus.warn("Janus reports problems " + (uplink ? "sending" : "receiving") +
           " packets on mid " + mid + " (" + lost + " lost packets)");
       },
-      onmessage: (msg, jsep) => {
-        Janus.debug(" ::: Got a message :::", msg);
-        let result = msg["result"];
-        if (result) {
-          if (result["status"]) {
-            let status = result["status"];
-            if (status === 'stopped')
-              this.stopStream(this.streaming);
-          } else if (msg["streaming"] === "event") {
-            // Does this event refer to a mid in particular?
-            let mid = result["mid"] ? result["mid"] : "0";
-            // Is simulcast in place?
-            let substream = result["substream"];
-            let temporal = result["temporal"];
-            if ((substream !== null && substream !== undefined) || (temporal !== null && temporal !== undefined)) {
-              // if (!simulcastStarted[mid]) {
-              //   simulcastStarted[mid] = true;
-              //   // addSimulcastButtons(mid, this.streaming);
-              // }
-              // We just received notice that there's been a switch, update the buttons
-              // updateSimulcastButtons(mid, substream, temporal);
-            }
-            // Is VP9/SVC in place?
-            let spatial = result["spatial_layer"];
-            temporal = result["temporal_layer"];
-            if ((spatial !== null && spatial !== undefined) || (temporal !== null && temporal !== undefined)) {
-              // if (!svcStarted[mid]) {
-              //   svcStarted[mid] = true;
-              //   // addSvcButtons(mid, this.streaming);
-              // }
-              // We just received notice that there's been a switch, update the buttons
-              // updateSvcButtons(mid, spatial, temporal);
-            }
-          }
-        } else if (msg["error"]) {
-          bootbox.alert(msg["error"]);
-          stopStream(this.streaming);
-          return;
-        }
-        if (jsep) {
-          Janus.debug("Handling SDP as well...", jsep);
-          let stereo = (jsep.sdp.indexOf("stereo=1") !== -1);
-          // Offer from the plugin, let's answer
-          this.streaming.createAnswer(
-            {
-              jsep: jsep,
-              // We only specify data channels here, as this way in
-              // case they were offered we'll enable them. Since we
-              // don't mention audio or video tracks, we autoaccept them
-              // as recvonly (since we won't capture anything ourselves)
-              tracks: [
-                { type: 'data' }
-              ],
-              customizeSdp: function (jsep) {
-                if (stereo && jsep.sdp.indexOf("stereo=1") == -1) {
-                  // Make sure that our offer contains stereo too
-                  jsep.sdp = jsep.sdp.replace("useinbandfec=1", "useinbandfec=1;stereo=1");
-                }
-              },
-              success: (jsep) => {
-                Janus.debug("Got SDP!", jsep);
-                let body = { request: "start" };
-                this.streaming.send({ message: body, jsep: jsep });
-              },
-              error: function (error) {
-                Janus.error("WebRTC error:", error);
-                bootbox.alert("WebRTC error... " + error.message);
-              }
-            });
-        }
-      },
-      onremotetrack: (...args) => this.#onremotetrack(...args),
-      // eslint-disable-next-line no-unused-vars
-      ondataopen: function (label, protocol) {
-        Janus.log("The DataChannel is available!");
-      },
-      ondata: function (data) {
-        Janus.debug("We got data from the DataChannel!", data);
-      },
-      oncleanup: function () {
-        Janus.log(" ::: Got a cleanup notification :::");
-        // simulcastStarted = false;
-        // remoteTracks = {};
-        // remoteVideos = 0;
-        dataMid = null;
+      destroyed: () => {
+        console.log('destroyed')
       }
-    });
+    })
   }
 
-  #onremotetrack(track, mid, on, metadata) {
-    Janus.debug(
-      "Remote track (mid=" + mid + ") " +
-      (on ? "added" : "removed") +
-      (metadata ? " (" + metadata.reason + ") " : "") + ":", track
-    );
-    let mstreamId = "mstream" + mid;
-    // if (streamsList[this.selectedStream] && streamsList[this.selectedStream].legacy)
-    //   mstreamId = "mstream0";
-    if (!on) {
-      // Track removed, get rid of the stream and the rendering
-      if (track.kind === "video") {
-        // remoteVideos--;
-        // if (remoteVideos === 0) {
-        //   // No video, at least for now: show a placeholder
-        // }
-      }
-      // delete remoteTracks[mid];
-      return;
-    }
-    let stream = null;
-    if (track.kind === "audio") {
-      // New audio track: create a stream out of it, and use a hidden <audio> element
-      stream = new MediaStream([track]);
-      // remoteTracks[mid] = stream;
-      Janus.log("Created remote audio stream:", stream);
-      // if (remoteVideos === 0) {
-      //   // No video, at least for now: show a placeholder
-      // }
-    } else {
-      // New video track: create a stream out of it
-      // remoteVideos++;
-      stream = new MediaStream([track]);
-      // remoteTracks[mid] = stream;
-      Janus.log("Created remote video stream:", stream);
-    }
-    var element = document.getElementById("videoStream")
-    // Janus.attachMediaStream(element, stream);
-    element.srcObject = stream;
-    // element.strObject = stream;
-    // element.src = URL.createObjectURL(stream);
-    var playPromise = element.play();
-    console.log('play video')
-    if (playPromise !== undefined) {
-      playPromise
-        .then(_ => {
-          console.log('started play')
+  #showStreaming(plugin) {
+    // https://github.com/meetecho/janus-gateway/blob/master/html/demos/streaming.js
+    console.log('todo')
+    plugin.send({
+      message: { request: "list" },
+      success: (result) => {
+        console.log('got list', result.list)
+        console.log(result.list[0])
+        plugin.send({
+          message: { request: "watch", id: this.idToWatch },
+          success: (result) => { console.log("watch request", result) }
         })
-        .catch(error => {
-          console.log('failed to play', error)
-        });
-    }
+        this.#getStreamingInfo(plugin, this.idToWatch)
+      },
+    })
   }
 
-  getStreamInfo(streaming) {
-    let body = { request: "info", id: parseInt(this.selectedStream) || this.selectedStream };
-    streaming.send({
-      message: body, success: (result) => {
-        if (result && result.info && result.info.metadata) {
-        }
+  #getStreamingInfo(plugin, id) {
+    plugin.send({
+      message: { request: "info", id },
+      success: (info) => {
+        console.log(info.info)
       }
-    });
+    })
   }
-
-  updateStreamsList(streaming) {
-    let body = { request: "list" };
-    Janus.debug("Sending message:", body);
-    streaming.send({
-      message: body, success: function (result) {
-        if (!result) {
-          bootbox.alert("Got no response to our query for available streams");
-          return;
-        }
-        if (result["list"]) {
-          let list = result["list"];
-          if (list && Array.isArray(list)) {
-            list.sort(function (a, b) {
-              if (!a || a.id < (b ? b.id : 0))
-                return -1;
-              if (!b || b.id < (a ? a.id : 0))
-                return 1;
-              return 0;
-            });
-          }
-          Janus.log("Got a list of available streams:", list);
-          // streamsList = {};
-          for (let mp in list) {
-            Janus.debug("  >> [" + list[mp]["id"] + "] " + list[mp]["description"] + " (" + list[mp]["type"] + ")");
-            // Check the nature of the available streams, and if there are some multistream ones
-            list[mp].legacy = true;
-            if (list[mp].media) {
-              let audios = 0, videos = 0;
-              for (let mi in list[mp].media) {
-                if (!list[mp].media[mi])
-                  continue;
-                if (list[mp].media[mi].type === "audio")
-                  audios++;
-                else if (list[mp].media[mi].type === "video")
-                  videos++;
-                if (audios > 1 || videos > 1) {
-                  list[mp].legacy = false;
-                  break;
-                }
-              }
-            }
-            // Keep track of all the available streams
-            // streamsList[list[mp]["id"]] = list[mp];
-          }
-        }
-      }
-    });
-  }
-
-  startStream(streaming, id) {
-    let body = { request: "watch", id };
-    streaming.send({ message: body });
-  }
-
-  stopStream(streaming) {
-    let body = { request: "stop" };
-    streaming.send({ message: body });
-    streaming.hangup();
-  }
-
 }
 
-var janusManager = null
-document.addEventListener("DOMContentLoaded", () => {
-  janusManager = new JanusManager()
-})
+const janusManager = new JanusManager()
