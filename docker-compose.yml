@@ -1,19 +1,24 @@
 services:
   janus:
-    build: ./janus
-    command: /opt/janus/bin/janus
+    image: 'sucwangsr/janus-webrtc-gateway-docker:1.3.0-slim'
+    command: ["/usr/local/bin/janus", "-F", "/usr/local/etc/janus"]
+    # build: ./janus
+    # command: /opt/janus/bin/janus
     volumes:
       - ./janus/certs:/opt/certs
       - ./data:/opt/data
       - type: bind
         source: ./janus/config/janus.transport.http.jcfg
-        target: /opt/janus/etc/janus/janus.transport.http.jcfg
+        # target: /opt/janus/etc/janus/janus.transport.http.jcfg
+        target: /usr/local/etc/janus/janus.transport.http.jcfg
       - type: bind
         source: ./janus/config/janus.transport.websockets.jcfg
-        target: /opt/janus/etc/janus/janus.transport.websockets.jcfg
+        # target: /opt/janus/etc/janus/janus.transport.websockets.jcfg
+        target: /usr/local/etc/janus/janus.transport.websockets.jcfg
       - type: bind
         source: ./janus/config/janus.plugin.streaming.jcfg
-        target: /opt/janus/etc/janus/janus.plugin.streaming.jcfg
+        # target: /opt/janus/etc/janus/janus.plugin.streaming.jcfg
+        target: /usr/local/etc/janus/janus.plugin.streaming.jcfg
     ports:
       - "5000-5100:5000-5100/udp" # rtp input
       # - "7088:7088" # admin
