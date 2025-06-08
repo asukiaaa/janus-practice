@@ -6,6 +6,12 @@
 
 ## Setup
 
+Load submodules
+```sh
+git submodule update --init --recursive
+```
+
+Run containers
 ```sh
 docker compose up
 ```
