@@ -341,7 +341,7 @@ class JanusManager {
         Janus.debug("We got data from the DataChannel!", data);
         $('#datarecv').val(data);
       },
-      oncleanup: function () {
+      oncleanup: () => {
         Janus.log(" ::: Got a cleanup notification :::");
         $('#videos').empty();
         $('#info').addClass('hide');
